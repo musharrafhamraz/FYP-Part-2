@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:fyppart2/features/analyze.dart';
+import 'package:fyppart2/features/month_base_disease_analysis.dart';
 
 class AllDataScreen extends StatelessWidget {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -9,13 +10,38 @@ class AllDataScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    var appBarHeight = AppBar().preferredSize.height;
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.purple,
-        title: const Text(
-          "All Data",
-          style: TextStyle(color: Colors.white),
-        ),
+        backgroundColor: Colors.teal,
+        foregroundColor: Colors.white,
+        title: const Text("All Data"),
+        actions: [
+          PopupMenuButton(
+            offset: Offset(0.0, appBarHeight),
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(8.0),
+                bottomRight: Radius.circular(8.0),
+                topLeft: Radius.circular(8.0),
+                topRight: Radius.circular(8.0),
+              ),
+            ),
+            itemBuilder: (context) => [
+              _buildPopupMenuItem(
+                title: 'More Analysis',
+                iconData: Icons.analytics,
+                onTap: () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) =>
+                              const PredictionAnalysisScreen()));
+                },
+              ),
+            ],
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
@@ -40,17 +66,18 @@ class AllDataScreen extends StatelessWidget {
                 var prediction = doc['prediction'];
                 var timestamp = doc['timestamp'].toDate();
 
-                return ListTile(
-                  title: Text(prediction),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Latitude: $latitude'),
-                      Text('Longitude: $longitude'),
-                      Text('Timestamp: $timestamp'),
-                    ],
+                return Card(
+                  child: ListTile(
+                    title: Text(prediction),
+                    subtitle: Text('Timestamp: $timestamp'),
+                    trailing: Column(
+                      children: [
+                        Text(latitude.toString()),
+                        Text(longitude.toString())
+                      ],
+                    ),
+                    isThreeLine: true,
                   ),
-                  isThreeLine: true,
                 );
               },
             );
@@ -58,7 +85,7 @@ class AllDataScreen extends StatelessWidget {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: Colors.purple,
+        backgroundColor: Colors.teal,
         onPressed: () {
           Navigator.push(
             context,
@@ -69,6 +96,25 @@ class AllDataScreen extends StatelessWidget {
           Icons.analytics,
           color: Colors.white,
         ),
+      ),
+    );
+  }
+
+  PopupMenuItem _buildPopupMenuItem(
+      {required String title,
+      required IconData iconData,
+      required void Function() onTap}) {
+    return PopupMenuItem(
+      onTap: onTap,
+      child: Row(
+        children: [
+          Icon(iconData, color: Colors.black),
+          const SizedBox(width: 16), // Adds space between icon and text
+          Text(
+            title,
+            style: TextStyle(color: Colors.black),
+          ),
+        ],
       ),
     );
   }

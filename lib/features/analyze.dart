@@ -19,6 +19,8 @@ class DataVisualizationScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Colors.teal,
+        foregroundColor: Colors.white,
         title: const Text("Data Visualization"),
       ),
       body: FutureBuilder(

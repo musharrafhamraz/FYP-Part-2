@@ -67,7 +67,8 @@ class _PredictionAnalysisScreenState extends State<PredictionAnalysisScreen>
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.teal,
-        title: const Text("Prediction Analysis"),
+        foregroundColor: Colors.white,
+        title: const Text("In-Depth Analysis"),
         bottom: placeNames.isNotEmpty && _tabController != null
             ? TabBar(
                 labelColor: Colors.black,
