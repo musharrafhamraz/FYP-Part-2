@@ -1,158 +1,177 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:geocoding/geocoding.dart';
+import 'package:fyppart2/helper_functions/analysis_helper_class.dart';
 import 'package:intl/intl.dart';
 
 class PredictionAnalysisScreen extends StatefulWidget {
+  const PredictionAnalysisScreen({super.key});
+
   @override
   _PredictionAnalysisScreenState createState() =>
       _PredictionAnalysisScreenState();
 }
 
-class _PredictionAnalysisScreenState extends State<PredictionAnalysisScreen> {
+class _PredictionAnalysisScreenState extends State<PredictionAnalysisScreen>
+    with TickerProviderStateMixin {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   String selectedMonth = DateFormat.MMMM().format(DateTime.now());
   int selectedYear = DateTime.now().year;
 
-  // Get all unique months from the data
-  List<String> getAllMonths() {
-    return List<String>.generate(12, (index) {
-      return DateFormat.MMMM().format(DateTime(0, index + 1));
-    });
+  TabController? _tabController;
+  List<String> placeNames = [];
+  final PredictionAnalysisHelper _helper = PredictionAnalysisHelper();
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchPlaceNames();
   }
 
-  // Count predictions in the selected month
-  Future<Map<String, int>> countPredictions(
-      List<DocumentSnapshot> documents) async {
-    Map<String, int> predictionCount = {};
-    Map<String, int> locationBasedCount = {};
+  @override
+  void dispose() {
+    _tabController?.dispose();
+    super.dispose();
+  }
 
-    for (var doc in documents) {
-      var data = doc.data() as Map<String, dynamic>;
-      var timestamp = data['timestamp'].toDate();
-      int month = timestamp.month;
-      int year = timestamp.year;
-      String prediction = data['prediction'];
-      double latitude = data['latitude'];
-      double longitude = data['longitude'];
+  Future<void> _fetchPlaceNames() async {
+    List<String> fetchedPlaceNames = await _helper.getPlaceNamesForMonth(
+      selectedMonth,
+      selectedYear,
+    );
 
-      // Check if the document matches the selected month and year
-      if (DateFormat.MMMM().format(DateTime(0, month)) == selectedMonth &&
-          year == selectedYear) {
-        // Update prediction count
-        predictionCount[prediction] = (predictionCount[prediction] ?? 0) + 1;
-
-        // Get the place name from coordinates
-        try {
-          List<Placemark> placemarks =
-              await placemarkFromCoordinates(latitude, longitude);
-          String placeName = placemarks.isNotEmpty
-              ? placemarks.first.locality ?? 'Unknown'
-              : 'Unknown';
-
-          String key = '$prediction at $placeName';
-          locationBasedCount[key] = (locationBasedCount[key] ?? 0) + 1;
-        } catch (e) {
-          // Handle potential geocoding errors
-          print("Error fetching place name: $e");
-        }
-      }
+    // Set the placeNames first, then handle TabController creation/disposal
+    setState(() {
+      placeNames = fetchedPlaceNames;
+    });
+    print(placeNames);
+    // After updating the state, handle TabController re-creation
+    if (_tabController != null) {
+      _tabController!.dispose();
     }
 
-    // Merge counts from locationBasedCount into predictionCount
-    locationBasedCount.forEach((key, count) {
-      predictionCount[key] = (predictionCount[key] ?? 0) + count;
-    });
+    // Create new TabController if placeNames are available
+    if (placeNames.isNotEmpty) {
+      _tabController = TabController(
+        length: placeNames.length,
+        vsync: this,
+      );
+    } else {
+      _tabController = null;
+    }
 
-    return predictionCount;
-  }
-
-  // Find the top N frequent predictions
-  List<MapEntry<String, int>> findTopFrequentPredictions(
-      Map<String, int> predictionCount, int topN) {
-    var sorted = predictionCount.entries.toList()
-      ..sort((a, b) => b.value.compareTo(a.value));
-    return sorted.take(topN).toList();
+    setState(() {}); // Force rebuild after creating the new TabController
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Prediction Analysis"),
+        backgroundColor: Colors.teal,
+        title: const Text("Prediction Analysis"),
+        bottom: placeNames.isNotEmpty && _tabController != null
+            ? TabBar(
+                labelColor: Colors.black,
+                unselectedLabelColor: Colors.white,
+                controller: _tabController,
+                isScrollable: true,
+                tabs: placeNames.map((place) => Tab(text: place)).toList(),
+              )
+            : null,
       ),
-      body: Column(
-        children: [
-          // Dropdown to select month
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: DropdownButton<String>(
-              value: selectedMonth,
-              items:
-                  getAllMonths().map<DropdownMenuItem<String>>((String month) {
-                return DropdownMenuItem<String>(
-                  value: month,
-                  child: Text(month),
-                );
+      body: placeNames.isNotEmpty && _tabController != null
+          ? TabBarView(
+              controller: _tabController,
+              children: placeNames.map((place) {
+                return _buildPredictionStreamForPlace(place);
               }).toList(),
-              onChanged: (String? newValue) {
-                setState(() {
-                  selectedMonth = newValue!;
-                });
-              },
+            )
+          : const Center(child: CircularProgressIndicator()),
+      floatingActionButton: _buildMonthDropdown(),
+    );
+  }
+
+  // Dropdown for selecting month
+  Widget _buildMonthDropdown() {
+    return DropdownButton<String>(
+      value: selectedMonth,
+      items:
+          _helper.getAllMonths().map<DropdownMenuItem<String>>((String month) {
+        return DropdownMenuItem<String>(
+          value: month,
+          child: Text(month),
+        );
+      }).toList(),
+      onChanged: (String? newValue) {
+        setState(() {
+          selectedMonth = newValue!;
+          _fetchPlaceNames(); // Refresh place names and TabController
+        });
+      },
+    );
+  }
+
+  // StreamBuilder for fetching and displaying predictions for a specific place
+  Widget _buildPredictionStreamForPlace(String placeName) {
+    return StreamBuilder<QuerySnapshot>(
+      stream: _firestore.collection('predictions').snapshots(),
+      builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
+        if (!snapshot.hasData) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        List<DocumentSnapshot> documents = snapshot.data!.docs;
+        return FutureBuilder<Map<String, int>>(
+          future: _helper.countPredictionsByPlace(
+              documents, selectedMonth, selectedYear, placeName),
+          builder: (context, AsyncSnapshot<Map<String, int>> snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            if (!snapshot.hasData || snapshot.data!.isEmpty) {
+              return const Center(
+                  child: Text("No predictions available for this place."));
+            }
+
+            Map<String, int> predictionCount = snapshot.data!;
+            return _buildPredictionList(predictionCount);
+          },
+        );
+      },
+    );
+  }
+
+  // Display the diseases and their count for a place
+  Widget _buildPredictionList(Map<String, int> predictionCount) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(top: 20.0, right: 20.0),
+              child: SizedBox(
+                width: double.infinity,
+                child: Text(
+                  textAlign: TextAlign.end,
+                  "Total: ${predictionCount.values.reduce((a, b) => a + b)}",
+                  style: const TextStyle(
+                      fontSize: 24, fontWeight: FontWeight.bold),
+                ),
+              ),
             ),
-          ),
-          // Stream to fetch and analyze data
-          Expanded(
-            child: StreamBuilder(
-              stream: _firestore.collection('predictions').snapshots(),
-              builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
-                if (!snapshot.hasData) {
-                  return Center(child: CircularProgressIndicator());
-                }
-
-                List<DocumentSnapshot> documents = snapshot.data!.docs;
-                return FutureBuilder<Map<String, int>>(
-                  future: countPredictions(documents),
-                  builder: (context, AsyncSnapshot<Map<String, int>> snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return Center(child: CircularProgressIndicator());
-                    }
-
-                    if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                      return Center(
-                          child: Text(
-                              "No predictions available for the selected month."));
-                    }
-
-                    Map<String, int> predictionCount = snapshot.data!;
-                    var topPredictions =
-                        findTopFrequentPredictions(predictionCount, 3);
-
-                    return Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          "Total Predictions in $selectedMonth: ${predictionCount.values.reduce((a, b) => a + b)}",
-                          style: TextStyle(fontSize: 18),
-                        ),
-                        SizedBox(height: 20),
-                        ...topPredictions
-                            .map((entry) => Text(
-                                  "${entry.key}: ${entry.value}",
-                                  style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold),
-                                ))
-                            .toList(),
-                      ],
-                    );
-                  },
-                );
-              },
-            ),
-          ),
-        ],
+            const SizedBox(height: 20),
+            ...predictionCount.entries.map((entry) {
+              return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4.0),
+                  child: ListTile(
+                    title: Text(entry.key),
+                    subtitle: Text("Count: ${entry.value}"),
+                  ));
+            }),
+          ],
+        ),
       ),
     );
   }
