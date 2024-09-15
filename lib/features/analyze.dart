@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:fyppart2/charts/bar_chart.dart';
 import 'package:fyppart2/charts/pie_chart.dart';
-import 'package:fyppart2/charts/stacked_area_chart.dart';
+// import 'package:fyppart2/charts/stacked_area_chart.dart';
 import 'package:fyppart2/reading_data/data_model.dart';
 
 class DataVisualizationScreen extends StatelessWidget {
@@ -34,15 +34,15 @@ class DataVisualizationScreen extends StatelessWidget {
 
           List<Prediction> predictions = snapshot.data!;
 
-          return ListView(
-            children: [
-              // HeatmapChart(predictions: predictions),
-              // TimeSeriesLineChart(predictions: predictions),
-              BarChartWidget(predictions: predictions),
-              // ScatterPlotWidget(predictions: predictions),
-              StackedAreaChartWidget(predictions: predictions),
-              PieChartWidget(predictions: predictions),
-            ],
+          return Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: ListView(
+              children: [
+                BarChartWidget(predictions: predictions),
+                // StackedAreaChartWidget(predictions: predictions),
+                PieChartWidget(predictions: predictions),
+              ],
+            ),
           );
         },
       ),
