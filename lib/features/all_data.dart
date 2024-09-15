@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:fyppart2/features/analyze.dart';
 import 'package:fyppart2/features/month_base_disease_analysis.dart';
+import 'package:timeago/timeago.dart' as timeago;
 
 class AllDataScreen extends StatelessWidget {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -57,7 +58,12 @@ class AllDataScreen extends StatelessWidget {
             List<DocumentSnapshot> documents = snapshot.data!.docs;
 
             // Display the data in a list
-            return ListView.builder(
+            return GridView.builder(
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                mainAxisSpacing: 10,
+                crossAxisSpacing: 10,
+              ),
               itemCount: documents.length,
               itemBuilder: (context, index) {
                 var doc = documents[index];
@@ -67,16 +73,54 @@ class AllDataScreen extends StatelessWidget {
                 var timestamp = doc['timestamp'].toDate();
 
                 return Card(
-                  child: ListTile(
-                    title: Text(prediction),
-                    subtitle: Text('Timestamp: $timestamp'),
-                    trailing: Column(
-                      children: [
-                        Text(latitude.toString()),
-                        Text(longitude.toString())
-                      ],
+                  elevation: 5,
+                  margin: const EdgeInsets.symmetric(vertical: 8.0),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12.0),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            prediction,
+                            style: const TextStyle(
+                              fontSize: 18.0,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(
+                              height:
+                                  8.0), // Space between prediction and time ago
+                          Text(
+                            'Diagnosed: ${timeago.format(timestamp)}',
+                            style: const TextStyle(
+                              fontSize: 14.0,
+                              color: Colors.grey,
+                            ),
+                          ),
+                          const SizedBox(
+                              height:
+                                  8.0), // Space between time ago and coordinates
+                          Text(
+                            longitude.toString(),
+                            style: const TextStyle(
+                              fontSize: 14.0,
+                              color: Colors.black87,
+                            ),
+                          ),
+                          Text(
+                            latitude.toString(),
+                            style: const TextStyle(
+                              fontSize: 14.0,
+                              color: Colors.black87,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    isThreeLine: true,
                   ),
                 );
               },

@@ -142,14 +142,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.0.2"
-  flutter_plugin_android_lifecycle:
-    dependency: transitive
-    description:
-      name: flutter_plugin_android_lifecycle
-      sha256: "9d98bd47ef9d34e803d438f17fd32b116d31009f534a6fa5ce3a1167f189a6de"
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.0.21"
   flutter_test:
     dependency: "direct dev"
     description: flutter
@@ -192,22 +184,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.2.0"
-  google_maps_flutter_android:
-    dependency: "direct main"
-    description:
-      name: google_maps_flutter_android
-      sha256: "3fa9a96b89bac3aecd06788b13247a2f059e282b4d1eb7fe5fbddff4d939889f"
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.14.1"
-  google_maps_flutter_platform_interface:
-    dependency: transitive
-    description:
-      name: google_maps_flutter_platform_interface
-      sha256: "4f6930fd668bf5d40feb2695d5695dbc0c35e5542b557a34ad35be491686d2ba"
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.9.0"
   intl:
     dependency: "direct main"
     description:
@@ -317,14 +293,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.2"
-  stream_transform:
-    dependency: transitive
-    description:
-      name: stream_transform
-      sha256: "14a00e794c7c11aa145a170587321aedce29769c08d7f58b1d141da75e3b1c6f"
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.1.0"
   string_scanner:
     dependency: transitive
     description:
@@ -349,6 +317,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.7.0"
+  timeago:
+    dependency: "direct main"
+    description:
+      name: timeago
+      sha256: "054cedf68706bb142839ba0ae6b135f6b68039f0b8301cbe8784ae653d5ff8de"
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.7.0"
   vector_math:
     dependency: transitive
     description:
@@ -375,4 +351,4 @@ packages:
     version: "0.5.1"
 sdks:
   dart: ">=3.4.3 <4.0.0"
-  flutter: ">=3.22.0"
+  flutter: ">=3.18.0-18.0.pre.54"
