@@ -7,11 +7,11 @@ class PredictionAnalysisScreen extends StatefulWidget {
   const PredictionAnalysisScreen({super.key});
 
   @override
-  _PredictionAnalysisScreenState createState() =>
-      _PredictionAnalysisScreenState();
+  PredictionAnalysisScreenState createState() =>
+      PredictionAnalysisScreenState();
 }
 
-class _PredictionAnalysisScreenState extends State<PredictionAnalysisScreen>
+class PredictionAnalysisScreenState extends State<PredictionAnalysisScreen>
     with TickerProviderStateMixin {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   String selectedMonth = DateFormat.MMMM().format(DateTime.now());
