@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:fyppart2/helper_functions/analysis_helper_class.dart';
 import 'package:intl/intl.dart';
 
@@ -86,7 +87,13 @@ class PredictionAnalysisScreenState extends State<PredictionAnalysisScreen>
                 return _buildPredictionStreamForPlace(place);
               }).toList(),
             )
-          : const Center(child: CircularProgressIndicator()),
+          : Center(
+              child: SpinKitWaveSpinner(
+              color: Colors.teal,
+              size: 70,
+              waveColor: Colors.teal.shade600,
+              trackColor: Colors.teal.shade200,
+            )),
       floatingActionButton: _buildMonthDropdown(),
     );
   }
@@ -117,7 +124,13 @@ class PredictionAnalysisScreenState extends State<PredictionAnalysisScreen>
       stream: _firestore.collection('predictions').snapshots(),
       builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
         if (!snapshot.hasData) {
-          return const Center(child: CircularProgressIndicator());
+          return Center(
+              child: SpinKitWaveSpinner(
+            color: Colors.teal,
+            size: 70,
+            waveColor: Colors.teal.shade600,
+            trackColor: Colors.teal.shade200,
+          ));
         }
 
         List<DocumentSnapshot> documents = snapshot.data!.docs;
@@ -126,7 +139,13 @@ class PredictionAnalysisScreenState extends State<PredictionAnalysisScreen>
               documents, selectedMonth, selectedYear, placeName),
           builder: (context, AsyncSnapshot<Map<String, int>> snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
+              return Center(
+                  child: SpinKitWaveSpinner(
+                color: Colors.teal,
+                size: 70,
+                waveColor: Colors.teal.shade600,
+                trackColor: Colors.teal.shade200,
+              ));
             }
 
             if (!snapshot.hasData || snapshot.data!.isEmpty) {

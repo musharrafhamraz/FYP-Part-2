@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:fyppart2/charts/bar_chart.dart';
 import 'package:fyppart2/charts/pie_chart.dart';
 // import 'package:fyppart2/charts/stacked_area_chart.dart';
@@ -27,8 +28,13 @@ class DataVisualizationScreen extends StatelessWidget {
         future: _fetchPredictions(),
         builder: (context, AsyncSnapshot<List<Prediction>> snapshot) {
           if (!snapshot.hasData) {
-            return const Center(
-              child: CircularProgressIndicator(),
+            return Center(
+              child: SpinKitWaveSpinner(
+                color: Colors.teal,
+                size: 70,
+                waveColor: Colors.teal.shade600,
+                trackColor: Colors.teal.shade200,
+              ),
             );
           }
 
